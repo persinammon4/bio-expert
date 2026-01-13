@@ -1,13 +1,11 @@
 ## BioExpert
 
-Biology expert that either answers from pre-existing data or searches web and saves
-new data to file.
+Biology expert that searches PubMed for question answers using OpenAI API. Has a second agent using scikit-learn and XGBoost to predict if a protein is an enzyme.
 
 For Git Bash on Windows: 
 
 ```
-python3 -m venv venv
-source venv/Scripts/activate
 pip install -r requirements.txt
-python main.py
+python ml_model.py [Optional if pickled model present]
+python controller.py
 ```

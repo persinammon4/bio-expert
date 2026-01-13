@@ -1,34 +1,34 @@
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
 from langchain.tools import tool
-
-# Your PubMed tool wrapper
 from pubmed_tool import PubMedTool
+from ml_model import predict_protein
 
 class BiologyExpertAgent:
     def __init__(self, model_name="gpt-3.5-turbo", temperature=0):
-        # Create the LLM model instance
         self.llm = ChatOpenAI(model=model_name, temperature=temperature)
 
-        # Define the PubMed tool as a LangChain tool
+        # PubMed tool
         @tool
         def pubmed_search(query: str) -> str:
-            """Search PubMed for relevant biology papers."""
+            """Search PubMed for relevant biology papers based on a query."""
             return PubMedTool.run(query)
 
-        # Put all tools in a list
-        tools = [pubmed_search]
+        # ML prediction tool
+        @tool
+        def enzyme_predictor(length: int, hydrophobicity: float, charge: int) -> str:
+            """Predict whether a protein is enzymatic given its length, hydrophobicity, and charge."""
+            features = {"length": length, "hydrophobicity": hydrophobicity, "charge": charge}
+            return predict_protein(features)
 
-        # Create the agent
-        # system_prompt defines the agent role/intent
+        tools = [pubmed_search, enzyme_predictor]
+
         self.agent = create_agent(
             model=self.llm,
             tools=tools,
-            system_prompt="You are a biology expert assistant that can call tools like PubMed search."
+            system_prompt="You are a biology expert. You can answer questions and predict if a protein is enzymatic using enzyme_predictor."
         )
 
     def answer(self, question: str) -> str:
-        # Agents expect an "invoke" with messages;
-        # supply a list with a single user message
         result = self.agent.invoke({"messages":[{"role":"user","content":question}]})
         return result["output"]
